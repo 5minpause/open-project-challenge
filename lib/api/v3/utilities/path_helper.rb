@@ -188,6 +188,8 @@ module API
             "#{project(id)}/categories"
           end
 
+          show :company
+
           def self.configuration
             "#{root}/configuration"
           end
