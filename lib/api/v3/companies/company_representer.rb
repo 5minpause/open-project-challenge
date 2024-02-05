@@ -30,7 +30,22 @@ module API
   module V3
     module Companies
       class CompanyRepresenter < ::API::Decorators::Single
-        # include API::Decorators::LinkedResource
+        include API::Decorators::LinkedResource
+
+        associated_resources :owningUsers,
+                             v3_path: :user,
+                             representer: API::V3::Users::UserRepresenter,
+                             skip_render: -> { represented.owner.nil? },
+                             link:->(*) {
+                              next if represented.owner.nil?
+
+                              Array(represented.owner).map do |owner|
+                                {
+                                  href: api_v3_paths.user(owner.id),
+                                  title: owner.name
+                                }
+                              end
+                             }
 
         property :id,
                  render_nil: true
