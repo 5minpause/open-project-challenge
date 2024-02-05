@@ -32,6 +32,15 @@ module API
       class CompanyRepresenter < ::API::Decorators::Single
         # include API::Decorators::LinkedResource
 
+        property :id,
+                 render_nil: true
+
+        property :name,
+                 render_nil: true
+
+        def _type
+          'Company'
+        end
       end
     end
   end
