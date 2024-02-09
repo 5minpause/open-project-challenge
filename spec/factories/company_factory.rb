@@ -29,5 +29,6 @@
 FactoryBot.define do
   factory :company do
     sequence(:name) { |n| "Company No. #{n}" }
+    association :owner, factory: :user
   end
 end
