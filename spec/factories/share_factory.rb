@@ -27,5 +27,9 @@
 #++
 
 FactoryBot.define do
-  factory :share
+  factory :share, class: 'CompanyShare' do
+    parent { create(:company) }
+    child { create(:company) }
+    active { true }
+  end
 end

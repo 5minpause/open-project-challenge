@@ -35,11 +35,11 @@ module API
         associated_resources :owningUsers,
                              v3_path: :user,
                              representer: API::V3::Users::UserRepresenter,
-                             skip_render: -> { represented.owner.nil? },
+                             skip_render: -> { represented.owningUsers.empty? },
                              link:->(*) {
-                              next if represented.owner.nil?
+                              next if represented.owningUsers.empty?
 
-                              Array(represented.owner).map do |owner|
+                              represented.owningUsers.map do |owner|
                                 {
                                   href: api_v3_paths.user(owner.id),
                                   title: owner.name

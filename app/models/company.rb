@@ -29,7 +29,40 @@
 class Company < ApplicationRecord
   belongs_to :owner, class_name: 'User'
 
+  has_many :parent_company_shares, class_name: 'CompanyShare', foreign_key: :child_id
+  has_many :parent_companies, through: :parent_company_shares, source: :parent
+
+  has_many :child_company_shares, class_name: 'CompanyShare', foreign_key: :parent_id
+  has_many :child_companies, through: :child_company_shares, source: :child
+
   def owningUsers
-    [owner]
+    users = User.where(id: Company.joins(:owner).where("companies.id IN (#{parents_sql(self)})").pluck(:owner_id))
+    users.any? ? users : [owner]
+  end
+
+  private
+
+  def parents_sql(company)
+    <<-SQL
+    WITH RECURSIVE company_tree(parent_id, active, path) AS (
+      SELECT parent_id, active, ARRAY[parent_id]
+      FROM company_shares AS cs
+      WHERE cs.child_id = #{company.id} AND cs.active = true
+    UNION ALL
+      SELECT cs.parent_id, cs.active, path || cs.parent_id
+      FROM company_shares AS cs
+      JOIN company_tree ON cs.child_id = company_tree.parent_id
+      WHERE cs.active = true AND NOT cs.parent_id = ANY(path)
+    )
+    SELECT ct.path[array_length(ct.path, 1)] AS last_parent_id
+    FROM company_tree ct
+    WHERE NOT EXISTS (
+      SELECT 1
+      FROM company_shares cs
+      WHERE cs.child_id = ct.path[array_length(ct.path, 1)] AND cs.active = true
+    )
+    GROUP BY ct.path
+    ORDER BY ct.path
+    SQL
   end
 end
